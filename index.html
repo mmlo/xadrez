@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Chess.js para lógica do jogo -->
+    <!-- Chess.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
     
     <style>
@@ -44,7 +44,6 @@
 
         .font-display { font-family: 'Cormorant Garamond', serif; }
 
-        /* Background atmosférico */
         .bg-atmosphere {
             position: fixed;
             inset: 0;
@@ -56,7 +55,6 @@
             pointer-events: none;
         }
 
-        /* Padrão de textura sutil */
         .texture-overlay {
             position: fixed;
             inset: 0;
@@ -81,7 +79,7 @@
                 0 0 0 1px rgba(212, 168, 75, 0.1),
                 inset 0 0 30px rgba(0, 0, 0, 0.2);
             user-select: none;
-            touch-action: none; /* Previne comportamentos indesejados em mobile */
+            touch-action: none;
         }
 
         .square {
@@ -96,7 +94,6 @@
 
         .square.light { background: var(--square-light); }
         .square.dark { background: var(--square-dark); }
-        
         .square:hover { filter: brightness(1.1); }
 
         .square.selected {
@@ -104,7 +101,6 @@
             box-shadow: inset 0 0 20px rgba(212, 168, 75, 0.6);
         }
 
-        /* Indicador de movimento legal */
         .square.legal-move::after {
             content: '';
             position: absolute;
@@ -115,7 +111,6 @@
             pointer-events: none;
         }
 
-        /* Indicador de captura legal */
         .square.legal-move.has-piece::after {
             width: 90%;
             height: 90%;
@@ -146,12 +141,10 @@
             0%, 100% { filter: brightness(1); }
             50% { filter: brightness(1.15); }
         }
-
         @keyframes hintBorder {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
         }
-
         @keyframes checkPulse {
             0%, 100% { background: var(--square-danger); }
             50% { background: rgba(220, 53, 69, 0.3); }
@@ -168,29 +161,12 @@
             position: relative;
         }
 
-        .piece:hover {
-            transform: scale(1.08);
-            filter: drop-shadow(2px 4px 6px rgba(0, 0, 0, 0.5));
-        }
+        .piece:hover { transform: scale(1.08); filter: drop-shadow(2px 4px 6px rgba(0, 0, 0, 0.5)); }
+        .piece.white { color: #fff; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5); }
+        .piece.black { color: #1a1a1a; text-shadow: 0 1px 2px rgba(255, 255, 255, 0.1); }
+        .piece.dragging { cursor: grabbing; transform: scale(1.2); z-index: 100; opacity: 0.8; }
 
-        .piece.white {
-            color: #fff;
-            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
-        }
-
-        .piece.black {
-            color: #1a1a1a;
-            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.1);
-        }
-
-        .piece.dragging {
-            cursor: grabbing;
-            transform: scale(1.2);
-            z-index: 100;
-            opacity: 0.8;
-        }
-
-        /* Coordenadas do tabuleiro */
+        /* Coordenadas */
         .coord-label {
             position: absolute;
             font-size: 10px;
@@ -198,14 +174,12 @@
             opacity: 0.7;
             pointer-events: none;
         }
-
         .coord-file { bottom: 2px; right: 4px; }
         .coord-rank { top: 2px; left: 4px; }
-
         .square.light .coord-label { color: var(--square-dark); }
         .square.dark .coord-label { color: var(--square-light); }
 
-        /* Painel de informações */
+        /* UI Panels */
         .info-panel {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
@@ -213,130 +187,48 @@
             backdrop-filter: blur(20px);
         }
 
-        /* Timer de turno */
-        .turn-timer {
-            height: 4px;
-            background: var(--bg-tertiary);
-            border-radius: 2px;
-            overflow: hidden;
-        }
-
-        .turn-timer-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--accent-gold), var(--accent-gold-light));
-            transition: width 0.1s linear;
-        }
-
+        .turn-timer { height: 4px; background: var(--bg-tertiary); border-radius: 2px; overflow: hidden; }
+        .turn-timer-fill { height: 100%; background: linear-gradient(90deg, var(--accent-gold), var(--accent-gold-light)); transition: width 0.1s linear; }
         .turn-timer-fill.warning { background: linear-gradient(90deg, #e74c3c, #c0392b); }
 
-        /* Botões */
         .btn-primary {
             background: linear-gradient(135deg, var(--accent-gold), var(--accent-gold-dark));
-            color: var(--bg-primary);
-            font-weight: 600;
-            padding: 12px 28px;
-            border-radius: 8px;
-            border: none;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 15px rgba(212, 168, 75, 0.3);
+            color: var(--bg-primary); font-weight: 600; padding: 12px 28px; border-radius: 8px;
+            border: none; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 4px 15px rgba(212, 168, 75, 0.3);
         }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 25px rgba(212, 168, 75, 0.4);
-        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 25px rgba(212, 168, 75, 0.4); }
 
         .btn-secondary {
-            background: var(--bg-tertiary);
-            color: var(--fg-primary);
-            font-weight: 500;
-            padding: 10px 20px;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-            cursor: pointer;
-            transition: all 0.2s ease;
+            background: var(--bg-tertiary); color: var(--fg-primary); font-weight: 500;
+            padding: 10px 20px; border-radius: 8px; border: 1px solid var(--border-color); cursor: pointer; transition: all 0.2s ease;
         }
-
-        .btn-secondary:hover {
-            background: var(--bg-secondary);
-            border-color: var(--accent-gold);
-        }
-
-        /* Seletor de dificuldade */
-        .difficulty-card {
-            background: var(--bg-secondary);
-            border: 2px solid transparent;
-            border-radius: 12px;
-            padding: 24px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .difficulty-card:hover {
-            border-color: var(--accent-gold);
-            transform: translateY(-4px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-        }
-
-        .difficulty-card.selected {
-            border-color: var(--accent-gold);
-            background: linear-gradient(135deg, rgba(212, 168, 75, 0.1), transparent);
-        }
+        .btn-secondary:hover { background: var(--bg-secondary); border-color: var(--accent-gold); }
 
         /* Modal */
         .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.85);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.3s ease, visibility 0.3s ease;
+            position: fixed; inset: 0; background: rgba(0, 0, 0, 0.85);
+            display: flex; align-items: center; justify-content: center; z-index: 1000;
+            opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease;
         }
-
-        .modal-overlay.active {
-            opacity: 1;
-            visibility: visible;
-        }
-
+        .modal-overlay.active { opacity: 1; visibility: visible; }
         .modal-content {
-            background: var(--bg-secondary);
-            border: 2px solid var(--accent-gold);
-            border-radius: 20px;
-            padding: 40px;
-            text-align: center;
-            transform: scale(0.9);
-            transition: transform 0.3s ease;
-            max-width: 90%;
+            background: var(--bg-secondary); border: 2px solid var(--accent-gold);
+            border-radius: 20px; padding: 40px; text-align: center; transform: scale(0.9);
+            transition: transform 0.3s ease; max-width: 90%;
         }
+        .modal-overlay.active .modal-content { transform: scale(1); }
 
-        .modal-overlay.active .modal-content {
-            transform: scale(1);
+        /* Diff Selector */
+        .difficulty-card {
+            background: var(--bg-secondary); border: 2px solid transparent;
+            border-radius: 12px; padding: 24px; cursor: pointer; transition: all 0.3s ease;
         }
-
-        /* Responsividade */
-        @media (max-width: 768px) {
-            .chess-board { max-width: 100%; }
-            .info-panel { padding: 16px; }
-            .difficulty-card { padding: 16px; }
-        }
+        .difficulty-card:hover { border-color: var(--accent-gold); transform: translateY(-4px); }
+        .difficulty-card.selected { border-color: var(--accent-gold); background: linear-gradient(135deg, rgba(212, 168, 75, 0.1), transparent); }
 
         @media (prefers-reduced-motion: reduce) {
-            *, *::before, *::after {
-                animation-duration: 0.01ms !important;
-                animation-iteration-count: 1 !important;
-                transition-duration: 0.01ms !important;
-            }
+            *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
         }
-        
-        /* Custom scrollbar */
-        .move-history::-webkit-scrollbar { width: 6px; }
-        .move-history::-webkit-scrollbar-track { background: var(--bg-tertiary); border-radius: 3px; }
-        .move-history::-webkit-scrollbar-thumb { background: var(--accent-gold-dark); border-radius: 3px; }
     </style>
 </head>
 <body>
@@ -347,12 +239,8 @@
         <!-- Tela de Menu -->
         <div id="menuScreen" class="flex-1 flex flex-col items-center justify-center p-6">
             <div class="text-center mb-12">
-                <h1 class="font-display text-5xl md:text-7xl font-bold mb-4" style="color: var(--accent-gold);">
-                    Xadrez Academy
-                </h1>
-                <p class="text-lg md:text-xl" style="color: var(--fg-secondary);">
-                    Aprenda xadrez jogando com tutoria inteligente
-                </p>
+                <h1 class="font-display text-5xl md:text-7xl font-bold mb-4" style="color: var(--accent-gold);">Xadrez Academy</h1>
+                <p class="text-lg md:text-xl" style="color: var(--fg-secondary);">Aprenda xadrez jogando com tutoria inteligente</p>
             </div>
 
             <div class="w-full max-w-3xl mb-10">
@@ -375,10 +263,7 @@
                     </div>
                 </div>
             </div>
-
-            <button class="btn-primary text-lg" id="startGameBtn">
-                Iniciar Partida
-            </button>
+            <button class="btn-primary text-lg" id="startGameBtn">Iniciar Partida</button>
         </div>
 
         <!-- Tela do Jogo -->
@@ -387,7 +272,6 @@
                 <div class="flex flex-col lg:flex-row gap-6 items-start">
                     <!-- Coluna do Tabuleiro -->
                     <div class="flex-1 w-full">
-                        <!-- Info do oponente -->
                         <div class="info-panel p-3 mb-2 flex items-center gap-4">
                             <div class="w-10 h-10 rounded-full flex items-center justify-center text-2xl" style="background: var(--bg-tertiary); border: 1px solid var(--border-color);">♟</div>
                             <div class="flex-1">
@@ -397,10 +281,8 @@
                             <div class="captured-pieces flex-wrap flex justify-end" id="capturedByBlack"></div>
                         </div>
 
-                        <!-- Tabuleiro -->
                         <div class="chess-board" id="chessBoard"></div>
 
-                        <!-- Info do jogador -->
                         <div class="info-panel p-3 mt-2 flex items-center gap-4">
                             <div class="w-10 h-10 rounded-full flex items-center justify-center text-2xl" style="background: var(--accent-gold);">♔</div>
                             <div class="flex-1">
@@ -411,49 +293,33 @@
                         </div>
                     </div>
 
-                    <!-- Coluna de Controles -->
+                    <!-- Controles -->
                     <div class="w-full lg:w-80 flex flex-col gap-4">
-                        <!-- Status e Timer -->
                         <div class="info-panel p-4">
                             <div class="flex items-center justify-between mb-3">
                                 <span class="font-semibold text-lg" id="statusText">Sua vez</span>
                                 <span class="text-sm px-3 py-1 rounded-full font-bold" style="background: var(--accent-gold); color: var(--bg-primary);" id="turnIndicator">Brancas</span>
                             </div>
-                            <div class="turn-timer">
-                                <div class="turn-timer-fill" id="turnTimerFill" style="width: 100%;"></div>
-                            </div>
-                            <div class="text-xs mt-2 text-right" style="color: var(--fg-muted);">
-                                Próxima dica automática em: <span id="hintCountdown" class="font-bold">30</span>s
-                            </div>
+                            <div class="turn-timer"><div class="turn-timer-fill" id="turnTimerFill" style="width: 100%;"></div></div>
+                            <div class="text-xs mt-2 text-right" style="color: var(--fg-muted);">Próxima dica em: <span id="hintCountdown" class="font-bold">30</span>s</div>
                         </div>
 
-                        <!-- Painel de Dicas -->
                         <div class="info-panel p-4" id="hintPanel">
                             <div class="flex items-center gap-2 mb-3">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--accent-gold);">
-                                    <circle cx="12" cy="12" r="10"/>
-                                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
-                                    <line x1="12" y1="17" x2="12.01" y2="17"/>
-                                </svg>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--accent-gold);"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                                 <span class="font-semibold">Treinador Virtual</span>
                             </div>
-                            <div id="hintContent" style="color: var(--fg-secondary); font-size: 0.95rem;">
-                                Analisando o jogo...
-                            </div>
+                            <div id="hintContent" style="color: var(--fg-secondary); font-size: 0.95rem;">Analisando o jogo...</div>
                         </div>
 
-                        <!-- Histórico -->
                         <div class="info-panel p-4 flex-1 overflow-hidden flex flex-col">
                             <div class="font-semibold mb-3">Histórico</div>
-                            <div class="move-history flex-1 overflow-y-auto text-sm font-mono" id="moveHistory" style="color: var(--fg-secondary); max-height: 180px;">
-                                <div class="italic">Aguardando início...</div>
-                            </div>
+                            <div class="move-history flex-1 overflow-y-auto text-sm font-mono" id="moveHistory" style="color: var(--fg-secondary); max-height: 180px;"><div class="italic">Aguardando início...</div></div>
                         </div>
 
-                        <!-- Botões de ação -->
                         <div class="grid grid-cols-2 gap-3">
                             <button class="btn-secondary col-span-2 flex items-center justify-center gap-2" id="requestHintBtn">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
                                 Pedir Dica
                             </button>
                             <button class="btn-secondary flex items-center justify-center gap-2" id="undoBtn">
@@ -471,7 +337,7 @@
         </div>
     </div>
 
-    <!-- Modal de Fim de Jogo -->
+    <!-- Modal -->
     <div id="gameOverModal" class="modal-overlay">
         <div class="modal-content">
             <div class="text-5xl mb-4" id="gameOverIcon">🏆</div>
@@ -486,12 +352,11 @@
 
     <script>
         // ==========================================
-        // CONFIGURAÇÃO E ESTADO GLOBAL
+        // CONFIGURAÇÃO E ESTADO
         // ==========================================
-        
         const CONFIG = {
             difficulty: {
-                easy: { depth: 1, hintTime: 15000, name: 'Iniciante', randomFactor: 0.4 },
+                easy: { depth: 1, hintTime: 15000, name: 'Iniciante', randomFactor: 0.5 },
                 medium: { depth: 2, hintTime: 25000, name: 'Intermediário', randomFactor: 0.1 },
                 hard: { depth: 3, hintTime: 35000, name: 'Avançado', randomFactor: 0 }
             },
@@ -502,7 +367,6 @@
             }
         };
 
-        // Estado do jogo isolado
         const gameState = {
             game: null,
             selectedDifficulty: 'medium',
@@ -513,16 +377,14 @@
             capturedPieces: { w: [], b: [] },
             isGameOver: false,
             lastMove: null,
-            lastDragTime: 0 // Controle para bug de drag vs click
+            lastDragTime: 0
         };
 
-        // Cache de elementos DOM
         const DOM = {};
-        
+
         // ==========================================
-        // MOTOR DE XADREZ - IA (CORRIGIDO)
+        // IA (Minimax)
         // ==========================================
-        
         const ChessAI = {
             positionTables: {
                 p: [[0,0,0,0,0,0,0,0],[50,50,50,50,50,50,50,50],[10,10,20,30,30,20,10,10],[5,5,10,25,25,10,5,5],[0,0,0,20,20,0,0,0],[5,-5,-10,0,0,-10,-5,5],[5,10,10,-20,-20,10,10,5],[0,0,0,0,0,0,0,0]],
@@ -532,14 +394,11 @@
                 q: [[-20,-10,-10,-5,-5,-10,-10,-20],[-10,0,0,0,0,0,0,-10],[-10,0,5,5,5,5,0,-10],[-5,0,5,5,5,5,0,-5],[0,0,5,5,5,5,0,-5],[-10,5,5,5,5,5,0,-10],[-10,0,5,0,0,0,0,-10],[-20,-10,-10,-5,-5,-10,-10,-20]],
                 k: [[-30,-40,-40,-50,-50,-40,-40,-30],[-30,-40,-40,-50,-50,-40,-40,-30],[-30,-40,-40,-50,-50,-40,-40,-30],[-30,-40,-40,-50,-50,-40,-40,-30],[-20,-30,-30,-40,-40,-30,-30,-20],[-10,-20,-20,-20,-20,-20,-20,-10],[20,20,0,0,0,0,20,20],[20,30,10,0,0,10,30,20]]
             },
-
             evaluateBoard(game) {
                 if (game.in_checkmate()) return game.turn() === 'w' ? -Infinity : Infinity;
                 if (game.in_draw()) return 0;
-
                 let score = 0;
                 const board = game.board();
-
                 for (let r = 0; r < 8; r++) {
                     for (let c = 0; c < 8; c++) {
                         const piece = board[r][c];
@@ -553,13 +412,10 @@
                 }
                 return score;
             },
-
             minimax(game, depth, alpha, beta, isMaximizingPlayer) {
                 if (depth === 0 || game.game_over()) return this.evaluateBoard(game);
-
                 const moves = game.moves();
-
-                if (isMaximizingPlayer) { 
+                if (isMaximizingPlayer) {
                     let maxEval = -Infinity;
                     for (const move of moves) {
                         game.move(move);
@@ -570,7 +426,7 @@
                         if (beta <= alpha) break;
                     }
                     return maxEval;
-                } else { 
+                } else {
                     let minEval = Infinity;
                     for (const move of moves) {
                         game.move(move);
@@ -583,26 +439,19 @@
                     return minEval;
                 }
             },
-
             findBestMove(game, difficulty) {
                 const config = CONFIG.difficulty[difficulty];
                 const moves = game.moves();
                 if (moves.length === 0) return null;
-
-                if (Math.random() < config.randomFactor) {
-                    return moves[Math.floor(Math.random() * moves.length)];
-                }
-
+                if (Math.random() < config.randomFactor) return moves[Math.floor(Math.random() * moves.length)];
+                
                 let bestMove = null;
                 let bestValue = Infinity; 
-                
                 moves.sort(() => Math.random() - 0.5);
-
                 for (const move of moves) {
                     game.move(move);
                     const moveValue = this.minimax(game, config.depth - 1, -Infinity, Infinity, true);
                     game.undo();
-
                     if (moveValue < bestValue) {
                         bestValue = moveValue;
                         bestMove = move;
@@ -613,9 +462,8 @@
         };
 
         // ==========================================
-        // SISTEMA DE TUTORIA
+        // TUTORIA
         // ==========================================
-        
         const TutorSystem = {
             analyzePosition(game) {
                 const turn = game.turn();
@@ -623,12 +471,8 @@
                 if (moves.length === 0) return null;
 
                 if (game.in_check()) {
-                    const safeMoves = moves.filter(m => {
-                        game.move(m.san); const safe = !game.in_check(); game.undo(); return safe;
-                    });
-                    if (safeMoves.length > 0) {
-                         return { priority: 10, move: safeMoves[0], message: "Xeque! Mova seu rei para segurança." };
-                    }
+                    const safeMoves = moves.filter(m => { game.move(m.san); const safe = !game.in_check(); game.undo(); return safe; });
+                    if (safeMoves.length > 0) return { priority: 10, move: safeMoves[0], message: "Xeque! Mova seu rei para segurança." };
                 }
 
                 const threats = this.findThreats(game, turn);
@@ -639,13 +483,10 @@
                 }
 
                 const captures = this.findGoodCaptures(game, turn);
-                if (captures.length > 0) {
-                    const c = captures[0];
-                    return { priority: 8, move: c, message: `Oportunidade! Capture a peça em ${c.to.toUpperCase()}.` };
-                }
+                if (captures.length > 0) return { priority: 8, move: captures[0], message: `Oportunidade! Capture a peça em ${captures[0].to.toUpperCase()}.` };
 
                 const castle = this.suggestCastling(game, turn);
-                if (castle) return { priority: 7, move: castle, message: "Protja seu rei fazendo o roque." };
+                if (castle) return { priority: 7, move: castle, message: "Proteja seu rei fazendo o roque." };
 
                 const dev = this.suggestDevelopment(game, turn);
                 if (dev) return { priority: 6, move: dev, message: "Desenvolva suas peças para o jogo." };
@@ -655,73 +496,43 @@
 
                 return { priority: 1, move: moves[0], message: "Tente encontrar uma boa casa para suas peças." };
             },
-
             findThreats(game, myColor) {
                 const tempGame = new Chess(game.fen());
                 const opponent = myColor === 'w' ? 'b' : 'w';
                 let fenParts = tempGame.fen().split(' ');
                 fenParts[1] = opponent;
                 tempGame.load(fenParts.join(' '));
-
                 const opponentMoves = tempGame.moves({ verbose: true });
                 const threats = [];
-
                 for (const move of opponentMoves) {
-                    if (move.captured && move.captured !== 'p') {
-                        threats.push({
-                            piece: move.captured,
-                            to: move.to,
-                            value: CONFIG.pieceValues[move.captured]
-                        });
-                    }
+                    if (move.captured && move.captured !== 'p') threats.push({ piece: move.captured, to: move.to, value: CONFIG.pieceValues[move.captured] });
                 }
                 return threats.sort((a, b) => b.value - a.value);
             },
-
             findDefense(game, threat) {
                 const moves = game.moves({ verbose: true });
-                const escapeMoves = moves.filter(m => m.to !== threat.to);
-                return escapeMoves.length > 0 ? escapeMoves[0] : null;
+                return moves.find(m => m.to === threat.to) || moves[0];
             },
-
             findGoodCaptures(game, myColor) {
-                const moves = game.moves({ verbose: true });
-                return moves
-                    .filter(m => m.captured)
-                    .sort((a, b) => CONFIG.pieceValues[b.captured] - CONFIG.pieceValues[a.captured]);
+                return game.moves({ verbose: true }).filter(m => m.captured).sort((a, b) => CONFIG.pieceValues[b.captured] - CONFIG.pieceValues[a.captured]);
             },
-
-            suggestCastling(game, myColor) {
-                const moves = game.moves({ verbose: true });
-                return moves.find(m => m.san.includes('O-O'));
-            },
-
-            suggestDevelopment(game, myColor) {
-                const moves = game.moves({ verbose: true });
-                const backRank = myColor === 'w' ? '1' : '8';
-                const minorPieces = ['n', 'b'];
-                return moves.find(m => minorPieces.includes(m.piece) && m.from[1] === backRank);
-            },
-
-            suggestCenterControl(game, myColor) {
-                const moves = game.moves({ verbose: true });
-                const center = ['d4', 'd5', 'e4', 'e5'];
-                return moves.find(m => center.includes(m.to));
-            }
+            suggestCastling(game) { return game.moves({ verbose: true }).find(m => m.san.includes('O-O')); },
+            suggestDevelopment(game) { return game.moves({ verbose: true }).find(m => ['n', 'b'].includes(m.piece) && ((game.turn() === 'w' && m.from[1] === '1') || (game.turn() === 'b' && m.from[1] === '8'))); },
+            suggestCenterControl(game) { return game.moves({ verbose: true }).find(m => ['d4', 'd5', 'e4', 'e5'].includes(m.to)); }
         };
 
         // ==========================================
-        // RENDERIZAÇÃO E CONTROLE UI
+        // RENDERIZAÇÃO
         // ==========================================
-        
         const BoardRenderer = {
             createBoard() {
                 DOM.chessBoard.innerHTML = '';
-                for (let r = 7; r >= 0; r--) {
+                // Cria fileiras de 8 (topo) até 1 (fundo)
+                for (let r = 8; r >= 1; r--) {
                     for (let c = 0; c < 8; c++) {
                         const square = document.createElement('div');
-                        const isLight = (r + c) % 2 === 0;
-                        const squareName = String.fromCharCode(97 + c) + (r + 1);
+                        const isLight = ((r + c) % 2 !== 0); // Cálculo de cor correto
+                        const squareName = String.fromCharCode(97 + c) + r;
                         
                         square.className = `square ${isLight ? 'light' : 'dark'}`;
                         square.dataset.square = squareName;
@@ -729,10 +540,10 @@
                         if (c === 0) {
                             const rank = document.createElement('span');
                             rank.className = 'coord-label coord-rank';
-                            rank.textContent = r + 1;
+                            rank.textContent = r;
                             square.appendChild(rank);
                         }
-                        if (r === 0) {
+                        if (r === 1) {
                             const file = document.createElement('span');
                             file.className = 'coord-label coord-file';
                             file.textContent = String.fromCharCode(97 + c);
@@ -742,7 +553,6 @@
                         square.addEventListener('click', e => this.handleInteraction(squareName, e));
                         square.addEventListener('dragover', e => e.preventDefault());
                         square.addEventListener('drop', e => this.handleDrop(e, squareName));
-
                         DOM.chessBoard.appendChild(square);
                     }
                 }
@@ -753,7 +563,6 @@
                 document.querySelectorAll('.square').forEach(sq => {
                     const piece = sq.querySelector('.piece');
                     if (piece) piece.remove();
-                    // Limpa TODAS as classes de estado visual
                     sq.classList.remove('selected', 'legal-move', 'has-piece', 'last-move', 'in-check', 'hint-move', 'hint-from');
                 });
 
@@ -761,7 +570,10 @@
                     for (let c = 0; c < 8; c++) {
                         const piece = board[r][c];
                         if (piece) {
-                            const sqName = String.fromCharCode(97 + c) + (r + 1);
+                            // CORREÇÃO CRÍTICA: chess.js index 0 = Linha 8 (Rank 8)
+                            const visualRow = 8 - r;
+                            const sqName = String.fromCharCode(97 + c) + visualRow;
+                            
                             const sqEl = document.querySelector(`[data-square="${sqName}"]`);
                             if (sqEl) {
                                 const pEl = document.createElement('span');
@@ -770,10 +582,7 @@
                                 pEl.draggable = true;
                                 
                                 pEl.addEventListener('dragstart', e => {
-                                    if (piece.color !== gameState.game.turn()) {
-                                        e.preventDefault();
-                                        return;
-                                    }
+                                    if (piece.color !== gameState.game.turn()) { e.preventDefault(); return; }
                                     gameState.selectedSquare = sqName;
                                     this.highlightMoves(sqName);
                                     e.dataTransfer.setData('text/plain', sqName);
@@ -781,10 +590,8 @@
                                 });
                                 pEl.addEventListener('dragend', () => {
                                     pEl.classList.remove('dragging');
-                                    // Registra o momento do drag para evitar bug de click
                                     gameState.lastDragTime = Date.now();
                                 });
-                                
                                 sqEl.appendChild(pEl);
                             }
                         }
@@ -808,7 +615,7 @@
                     for (let c = 0; c < 8; c++) {
                         const p = board[r][c];
                         if (p && p.type === 'k' && p.color === color) {
-                            return String.fromCharCode(97 + c) + (r + 1);
+                            return String.fromCharCode(97 + c) + (8 - r);
                         }
                     }
                 }
@@ -831,28 +638,17 @@
             },
 
             clearHighlights() {
-                document.querySelectorAll('.square').forEach(sq => {
-                    sq.classList.remove('selected', 'legal-move', 'has-piece');
-                });
+                document.querySelectorAll('.square').forEach(sq => sq.classList.remove('selected', 'legal-move', 'has-piece'));
             },
 
             handleInteraction(squareName, event) {
-                // FIX: Ignora o clique se acabou de soltar um drag (evita seleção fantasma)
-                if (Date.now() - gameState.lastDragTime < 200) {
-                    return;
-                }
-
+                if (Date.now() - gameState.lastDragTime < 200) return;
                 if (gameState.isGameOver || gameState.game.turn() === 'b') return;
 
                 const piece = gameState.game.get(squareName);
 
                 if (gameState.selectedSquare) {
-                    const move = gameState.game.move({
-                        from: gameState.selectedSquare,
-                        to: squareName,
-                        promotion: 'q'
-                    });
-
+                    const move = gameState.game.move({ from: gameState.selectedSquare, to: squareName, promotion: 'q' });
                     if (move) {
                         this.clearHighlights();
                         this.executeMove(move);
@@ -874,12 +670,7 @@
                 const source = e.dataTransfer.getData('text/plain');
                 if (!source) return;
 
-                const move = gameState.game.move({
-                    from: source,
-                    to: targetSquare,
-                    promotion: 'q'
-                });
-
+                const move = gameState.game.move({ from: source, to: targetSquare, promotion: 'q' });
                 if (move) {
                     this.clearHighlights();
                     this.executeMove(move);
@@ -889,16 +680,13 @@
 
             executeMove(move) {
                 gameState.lastMove = { from: move.from, to: move.to };
-                
                 if (move.captured) {
                     const capturedColor = move.color === 'w' ? 'b' : 'w';
                     gameState.capturedPieces[capturedColor].push(move.captured);
                     this.updateCaptured();
                 }
-
                 gameState.moveHistory.push(move.san);
                 this.updateHistory();
-                
                 this.updatePieces();
                 
                 if (this.checkGameOver()) return;
@@ -907,14 +695,13 @@
                     DOM.statusText.textContent = "Pensando...";
                     DOM.turnIndicator.textContent = "Pretas";
                     DOM.turnIndicator.style.background = "var(--bg-tertiary)";
-                    
                     setTimeout(() => {
                         const aiMove = ChessAI.findBestMove(gameState.game, gameState.selectedDifficulty);
                         if (aiMove) {
                             const m = gameState.game.move(aiMove);
                             if (m) this.executeMove(m);
                         }
-                    }, 300);
+                    }, 500);
                 } else {
                     DOM.statusText.textContent = "Sua vez";
                     DOM.turnIndicator.textContent = "Brancas";
@@ -939,19 +726,12 @@
             showGameOver(result) {
                 gameState.isGameOver = true;
                 clearInterval(gameState.hintTimer);
-
                 if (result === 'win') {
-                    DOM.gameOverIcon.textContent = '🏆';
-                    DOM.gameOverTitle.textContent = 'Vitória!';
-                    DOM.gameOverMessage.textContent = 'Parabéns, você venceu!';
+                    DOM.gameOverIcon.textContent = '🏆'; DOM.gameOverTitle.textContent = 'Vitória!'; DOM.gameOverMessage.textContent = 'Parabéns, você venceu!';
                 } else if (result === 'lose') {
-                    DOM.gameOverIcon.textContent = '💀';
-                    DOM.gameOverTitle.textContent = 'Derrota';
-                    DOM.gameOverMessage.textContent = 'Xeque-mate. Tente novamente!';
+                    DOM.gameOverIcon.textContent = '💀'; DOM.gameOverTitle.textContent = 'Derrota'; DOM.gameOverMessage.textContent = 'Xeque-mate. Tente novamente!';
                 } else {
-                    DOM.gameOverIcon.textContent = '🤝';
-                    DOM.gameOverTitle.textContent = 'Empate';
-                    DOM.gameOverMessage.textContent = 'A partida terminou empatada.';
+                    DOM.gameOverIcon.textContent = '🤝'; DOM.gameOverTitle.textContent = 'Empate'; DOM.gameOverMessage.textContent = 'A partida terminou empatada.';
                 }
                 document.getElementById('gameOverModal').classList.add('active');
             },
@@ -960,7 +740,6 @@
                 DOM.capturedByWhite.innerHTML = gameState.capturedPieces.w.map(p => `<span class="text-lg">${CONFIG.pieceSymbols.b[p]}</span>`).join('');
                 DOM.capturedByBlack.innerHTML = gameState.capturedPieces.b.map(p => `<span class="text-lg">${CONFIG.pieceSymbols.w[p]}</span>`).join('');
             },
-
             updateHistory() {
                 let html = '';
                 for (let i = 0; i < gameState.moveHistory.length; i += 2) {
@@ -970,30 +749,20 @@
                 DOM.moveHistory.innerHTML = html;
                 DOM.moveHistory.scrollTop = DOM.moveHistory.scrollHeight;
             },
-
             resetTimer() {
                 clearInterval(gameState.hintTimer);
                 gameState.turnStartTime = Date.now();
-                
                 const hintTime = CONFIG.difficulty[gameState.selectedDifficulty].hintTime;
-                
                 gameState.hintTimer = setInterval(() => {
                     if (gameState.game.turn() !== 'w') return;
-                    
                     const elapsed = Date.now() - gameState.turnStartTime;
                     const remaining = hintTime - elapsed;
                     const pct = Math.max(0, (remaining / hintTime) * 100);
-                    
                     DOM.turnTimerFill.style.width = pct + '%';
                     DOM.hintCountdown.textContent = Math.max(0, Math.ceil(remaining / 1000));
-
-                    if (remaining <= 0) {
-                        clearInterval(gameState.hintTimer);
-                        this.triggerHint();
-                    }
+                    if (remaining <= 0) { clearInterval(gameState.hintTimer); this.triggerHint(); }
                 }, 200);
             },
-
             triggerHint() {
                 const hint = TutorSystem.analyzePosition(gameState.game);
                 if (hint) {
@@ -1010,7 +779,6 @@
         // ==========================================
         // INICIALIZAÇÃO
         // ==========================================
-
         function init() {
             DOM.menuScreen = document.getElementById('menuScreen');
             DOM.gameScreen = document.getElementById('gameScreen');
@@ -1039,16 +807,8 @@
             document.getElementById('requestHintBtn').addEventListener('click', () => BoardRenderer.triggerHint());
             document.getElementById('undoBtn').addEventListener('click', undoMove);
             document.getElementById('newGameBtn').addEventListener('click', startGame);
-            
-            document.getElementById('playAgainBtn').addEventListener('click', () => {
-                DOM.gameOverModal.classList.remove('active');
-                startGame();
-            });
-            document.getElementById('backToMenuBtn').addEventListener('click', () => {
-                DOM.gameOverModal.classList.remove('active');
-                DOM.gameScreen.classList.add('hidden');
-                DOM.menuScreen.classList.remove('hidden');
-            });
+            document.getElementById('playAgainBtn').addEventListener('click', () => { DOM.gameOverModal.classList.remove('active'); startGame(); });
+            document.getElementById('backToMenuBtn').addEventListener('click', () => { DOM.gameOverModal.classList.remove('active'); DOM.gameScreen.classList.add('hidden'); DOM.menuScreen.classList.remove('hidden'); });
         }
 
         function startGame() {
@@ -1081,13 +841,9 @@
 
         function undoMove() {
             if (gameState.moveHistory.length < 2 || gameState.isGameOver) return;
-            
-            gameState.game.undo(); 
-            gameState.game.undo(); 
-            gameState.moveHistory.pop();
-            gameState.moveHistory.pop();
+            gameState.game.undo(); gameState.game.undo(); 
+            gameState.moveHistory.pop(); gameState.moveHistory.pop();
             gameState.lastMove = null;
-            
             BoardRenderer.updatePieces();
             BoardRenderer.updateHistory();
             BoardRenderer.resetTimer();
