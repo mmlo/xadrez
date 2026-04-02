@@ -80,7 +80,8 @@
                 0 20px 60px rgba(0, 0, 0, 0.5),
                 0 0 0 1px rgba(212, 168, 75, 0.1),
                 inset 0 0 30px rgba(0, 0, 0, 0.2);
-            user-select: none; /* Previne seleção de texto acidental */
+            user-select: none;
+            touch-action: none; /* Previne comportamentos indesejados em mobile */
         }
 
         .square {
@@ -96,7 +97,6 @@
         .square.light { background: var(--square-light); }
         .square.dark { background: var(--square-dark); }
         
-        /* Efeito hover apenas em casas jogáveis ou selecionadas */
         .square:hover { filter: brightness(1.1); }
 
         .square.selected {
@@ -104,7 +104,7 @@
             box-shadow: inset 0 0 20px rgba(212, 168, 75, 0.6);
         }
 
-        /* Indicador de movimento legal (ponto) */
+        /* Indicador de movimento legal */
         .square.legal-move::after {
             content: '';
             position: absolute;
@@ -115,13 +115,13 @@
             pointer-events: none;
         }
 
-        /* Indicador de captura legal (anel) */
+        /* Indicador de captura legal */
         .square.legal-move.has-piece::after {
             width: 90%;
             height: 90%;
             background: transparent;
             border: 4px solid rgba(0, 0, 0, 0.15);
-            border-radius: 50%; /* Quadrado ficava estranho, mantendo círculo ou ajustando */
+            border-radius: 50%;
         }
 
         .square.hint-move { animation: hintPulse 1.5s ease-in-out infinite; }
@@ -165,7 +165,7 @@
             filter: drop-shadow(1px 2px 3px rgba(0, 0, 0, 0.4));
             transition: transform 0.1s ease, filter 0.15s ease;
             z-index: 5;
-            position: relative; /* Para ficar sobre as coordenadas */
+            position: relative;
         }
 
         .piece:hover {
@@ -284,12 +284,12 @@
             background: linear-gradient(135deg, rgba(212, 168, 75, 0.1), transparent);
         }
 
-        /* Modal - CORREÇÃO DEFINITIVA */
+        /* Modal */
         .modal-overlay {
             position: fixed;
             inset: 0;
             background: rgba(0, 0, 0, 0.85);
-            display: flex; /* Flex para centralizar quando visível */
+            display: flex;
             align-items: center;
             justify-content: center;
             z-index: 1000;
@@ -298,7 +298,6 @@
             transition: opacity 0.3s ease, visibility 0.3s ease;
         }
 
-        /* Classe para mostrar o modal */
         .modal-overlay.active {
             opacity: 1;
             visibility: visible;
@@ -326,7 +325,6 @@
             .difficulty-card { padding: 16px; }
         }
 
-        /* Reduced motion */
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after {
                 animation-duration: 0.01ms !important;
@@ -514,7 +512,8 @@
             moveHistory: [],
             capturedPieces: { w: [], b: [] },
             isGameOver: false,
-            lastMove: null
+            lastMove: null,
+            lastDragTime: 0 // Controle para bug de drag vs click
         };
 
         // Cache de elementos DOM
@@ -525,7 +524,7 @@
         // ==========================================
         
         const ChessAI = {
-            positionTables: { /* Tabelas de posição permanecem iguais, omitidas por brevidade mas estão no código real */
+            positionTables: {
                 p: [[0,0,0,0,0,0,0,0],[50,50,50,50,50,50,50,50],[10,10,20,30,30,20,10,10],[5,5,10,25,25,10,5,5],[0,0,0,20,20,0,0,0],[5,-5,-10,0,0,-10,-5,5],[5,10,10,-20,-20,10,10,5],[0,0,0,0,0,0,0,0]],
                 n: [[-50,-40,-30,-30,-30,-30,-40,-50],[-40,-20,0,0,0,0,-20,-40],[-30,0,10,15,15,10,0,-30],[-30,5,15,20,20,15,5,-30],[-30,0,15,20,20,15,0,-30],[-30,5,10,15,15,10,5,-30],[-40,-20,0,5,5,0,-20,-40],[-50,-40,-30,-30,-30,-30,-40,-50]],
                 b: [[-20,-10,-10,-10,-10,-10,-10,-20],[-10,0,0,0,0,0,0,-10],[-10,0,5,10,10,5,0,-10],[-10,5,5,10,10,5,5,-10],[-10,0,10,10,10,10,0,-10],[-10,10,10,10,10,10,10,-10],[-10,5,0,0,0,0,5,-10],[-20,-10,-10,-10,-10,-10,-10,-20]],
@@ -534,7 +533,6 @@
                 k: [[-30,-40,-40,-50,-50,-40,-40,-30],[-30,-40,-40,-50,-50,-40,-40,-30],[-30,-40,-40,-50,-50,-40,-40,-30],[-30,-40,-40,-50,-50,-40,-40,-30],[-20,-30,-30,-40,-40,-30,-30,-20],[-10,-20,-20,-20,-20,-20,-20,-10],[20,20,0,0,0,0,20,20],[20,30,10,0,0,10,30,20]]
             },
 
-            // Avaliação: Positivo = Vantagem Brancas, Negativo = Vantagem Pretas
             evaluateBoard(game) {
                 if (game.in_checkmate()) return game.turn() === 'w' ? -Infinity : Infinity;
                 if (game.in_draw()) return 0;
@@ -547,11 +545,8 @@
                         const piece = board[r][c];
                         if (piece) {
                             const value = CONFIG.pieceValues[piece.type];
-                            // Ajusta linha para tabelas (brancas crescem de baixo pra cima)
                             const posRow = piece.color === 'w' ? 7 - r : r;
                             const positionBonus = this.positionTables[piece.type][posRow][c];
-                            
-                            // Soma positivo para brancas, negativo para pretas
                             score += piece.color === 'w' ? (value + positionBonus) : -(value + positionBonus);
                         }
                     }
@@ -564,7 +559,7 @@
 
                 const moves = game.moves();
 
-                if (isMaximizingPlayer) { // Brancas maximizam
+                if (isMaximizingPlayer) { 
                     let maxEval = -Infinity;
                     for (const move of moves) {
                         game.move(move);
@@ -575,7 +570,7 @@
                         if (beta <= alpha) break;
                     }
                     return maxEval;
-                } else { // Pretas minimizam
+                } else { 
                     let minEval = Infinity;
                     for (const move of moves) {
                         game.move(move);
@@ -594,22 +589,17 @@
                 const moves = game.moves();
                 if (moves.length === 0) return null;
 
-                // Fator aleatório para níveis fáceis
                 if (Math.random() < config.randomFactor) {
                     return moves[Math.floor(Math.random() * moves.length)];
                 }
 
                 let bestMove = null;
-                // Pretas são o jogador minimizante (querem o menor score)
-                // Logo, começamos com +Infinito e buscamos o menor valor
                 let bestValue = Infinity; 
                 
-                // Embaralha para variação
                 moves.sort(() => Math.random() - 0.5);
 
                 for (const move of moves) {
                     game.move(move);
-                    // Após mover as Pretas, é vez das Brancas (Maximizando)
                     const moveValue = this.minimax(game, config.depth - 1, -Infinity, Infinity, true);
                     game.undo();
 
@@ -628,11 +618,10 @@
         
         const TutorSystem = {
             analyzePosition(game) {
-                const turn = game.turn(); // De quem é a vez
+                const turn = game.turn();
                 const moves = game.moves({ verbose: true });
                 if (moves.length === 0) return null;
 
-                // 1. Xeque: Prioridade máxima
                 if (game.in_check()) {
                     const safeMoves = moves.filter(m => {
                         game.move(m.san); const safe = !game.in_check(); game.undo(); return safe;
@@ -642,7 +631,6 @@
                     }
                 }
 
-                // 2. Ameaças imediatas (Peças penduradas)
                 const threats = this.findThreats(game, turn);
                 if (threats.length > 0) {
                     const t = threats[0];
@@ -650,36 +638,27 @@
                     if (defense) return { priority: 9, move: defense, message: `Sua peça em ${t.to.toUpperCase()} está sob ataque! Defenda-a.` };
                 }
 
-                // 3. Capturas gratuitas ou vantajosas
                 const captures = this.findGoodCaptures(game, turn);
                 if (captures.length > 0) {
                     const c = captures[0];
                     return { priority: 8, move: c, message: `Oportunidade! Capture a peça em ${c.to.toUpperCase()}.` };
                 }
 
-                // 4. Roque
                 const castle = this.suggestCastling(game, turn);
                 if (castle) return { priority: 7, move: castle, message: "Protja seu rei fazendo o roque." };
 
-                // 5. Desenvolvimento
                 const dev = this.suggestDevelopment(game, turn);
                 if (dev) return { priority: 6, move: dev, message: "Desenvolva suas peças para o jogo." };
 
-                // 6. Centro
                 const center = this.suggestCenterControl(game, turn);
                 if (center) return { priority: 5, move: center, message: "Controle o centro para dominar o jogo." };
 
-                // Fallback
                 return { priority: 1, move: moves[0], message: "Tente encontrar uma boa casa para suas peças." };
             },
 
             findThreats(game, myColor) {
-                // Simula o turno do oponente para ver onde ele pode capturar
                 const tempGame = new Chess(game.fen());
                 const opponent = myColor === 'w' ? 'b' : 'w';
-                
-                // Hack para mudar o turno no chess.js sem alterar o tabuleiro
-                // Trocamos a cor no FEN
                 let fenParts = tempGame.fen().split(' ');
                 fenParts[1] = opponent;
                 tempGame.load(fenParts.join(' '));
@@ -688,7 +667,7 @@
                 const threats = [];
 
                 for (const move of opponentMoves) {
-                    if (move.captured && move.captured !== 'p') { // Ignora peões por enquanto, foco em peças maiores
+                    if (move.captured && move.captured !== 'p') {
                         threats.push({
                             piece: move.captured,
                             to: move.to,
@@ -696,14 +675,12 @@
                         });
                     }
                 }
-                return threats.sort((a, b) => b.value - a.value); // Ameaças mais valiosas primeiro
+                return threats.sort((a, b) => b.value - a.value);
             },
 
             findDefense(game, threat) {
-                // Encontra movimentos que defendem a casa ameaçada ou movem a peça
                 const moves = game.moves({ verbose: true });
-                // Tenta mover a peça ameaçada
-                const escapeMoves = moves.filter(m => m.to !== threat.to); // Simplificação
+                const escapeMoves = moves.filter(m => m.to !== threat.to);
                 return escapeMoves.length > 0 ? escapeMoves[0] : null;
             },
 
@@ -749,7 +726,6 @@
                         square.className = `square ${isLight ? 'light' : 'dark'}`;
                         square.dataset.square = squareName;
 
-                        // Coordenadas
                         if (c === 0) {
                             const rank = document.createElement('span');
                             rank.className = 'coord-label coord-rank';
@@ -763,8 +739,7 @@
                             square.appendChild(file);
                         }
 
-                        // Event Listeners
-                        square.addEventListener('click', () => this.handleInteraction(squareName));
+                        square.addEventListener('click', e => this.handleInteraction(squareName, e));
                         square.addEventListener('dragover', e => e.preventDefault());
                         square.addEventListener('drop', e => this.handleDrop(e, squareName));
 
@@ -775,14 +750,13 @@
 
             updatePieces() {
                 const board = gameState.game.board();
-                // Limpar peças e highlights
                 document.querySelectorAll('.square').forEach(sq => {
                     const piece = sq.querySelector('.piece');
                     if (piece) piece.remove();
+                    // Limpa TODAS as classes de estado visual
                     sq.classList.remove('selected', 'legal-move', 'has-piece', 'last-move', 'in-check', 'hint-move', 'hint-from');
                 });
 
-                // Renderizar peças
                 for (let r = 0; r < 8; r++) {
                     for (let c = 0; c < 8; c++) {
                         const piece = board[r][c];
@@ -805,7 +779,11 @@
                                     e.dataTransfer.setData('text/plain', sqName);
                                     setTimeout(() => pEl.classList.add('dragging'), 0);
                                 });
-                                pEl.addEventListener('dragend', () => pEl.classList.remove('dragging'));
+                                pEl.addEventListener('dragend', () => {
+                                    pEl.classList.remove('dragging');
+                                    // Registra o momento do drag para evitar bug de click
+                                    gameState.lastDragTime = Date.now();
+                                });
                                 
                                 sqEl.appendChild(pEl);
                             }
@@ -813,13 +791,11 @@
                     }
                 }
 
-                // Highlight último movimento
                 if (gameState.lastMove) {
                     document.querySelector(`[data-square="${gameState.lastMove.from}"]`)?.classList.add('last-move');
                     document.querySelector(`[data-square="${gameState.lastMove.to}"]`)?.classList.add('last-move');
                 }
 
-                // Highlight Xeque
                 if (gameState.game.in_check()) {
                     const kPos = this.findKing(gameState.game.turn());
                     if (kPos) document.querySelector(`[data-square="${kPos}"]`)?.classList.add('in-check');
@@ -860,28 +836,30 @@
                 });
             },
 
-            handleInteraction(squareName) {
+            handleInteraction(squareName, event) {
+                // FIX: Ignora o clique se acabou de soltar um drag (evita seleção fantasma)
+                if (Date.now() - gameState.lastDragTime < 200) {
+                    return;
+                }
+
                 if (gameState.isGameOver || gameState.game.turn() === 'b') return;
 
                 const piece = gameState.game.get(squareName);
 
                 if (gameState.selectedSquare) {
-                    // Tentar mover
                     const move = gameState.game.move({
                         from: gameState.selectedSquare,
                         to: squareName,
-                        promotion: 'q' // Auto-promove para dama
+                        promotion: 'q'
                     });
 
                     if (move) {
                         this.clearHighlights();
                         this.executeMove(move);
                     } else if (piece && piece.color === 'w') {
-                        // Selecionar outra peça
                         gameState.selectedSquare = squareName;
                         this.highlightMoves(squareName);
                     } else {
-                        // Deselecionar
                         gameState.selectedSquare = null;
                         this.clearHighlights();
                     }
@@ -912,29 +890,24 @@
             executeMove(move) {
                 gameState.lastMove = { from: move.from, to: move.to };
                 
-                // Atualiza capturas
                 if (move.captured) {
                     const capturedColor = move.color === 'w' ? 'b' : 'w';
                     gameState.capturedPieces[capturedColor].push(move.captured);
                     this.updateCaptured();
                 }
 
-                // Histórico
                 gameState.moveHistory.push(move.san);
                 this.updateHistory();
                 
                 this.updatePieces();
                 
-                // Verifica fim de jogo
                 if (this.checkGameOver()) return;
 
-                // Turno da IA
                 if (gameState.game.turn() === 'b') {
                     DOM.statusText.textContent = "Pensando...";
                     DOM.turnIndicator.textContent = "Pretas";
                     DOM.turnIndicator.style.background = "var(--bg-tertiary)";
                     
-                    // Pequeno delay para UX
                     setTimeout(() => {
                         const aiMove = ChessAI.findBestMove(gameState.game, gameState.selectedDifficulty);
                         if (aiMove) {
@@ -943,7 +916,6 @@
                         }
                     }, 300);
                 } else {
-                    // Volta para o jogador
                     DOM.statusText.textContent = "Sua vez";
                     DOM.turnIndicator.textContent = "Brancas";
                     DOM.turnIndicator.style.background = "var(--accent-gold)";
@@ -1025,7 +997,6 @@
             triggerHint() {
                 const hint = TutorSystem.analyzePosition(gameState.game);
                 if (hint) {
-                    // Visual Highlight
                     document.querySelectorAll('.square').forEach(sq => sq.classList.remove('hint-move', 'hint-from'));
                     if (hint.move) {
                         document.querySelector(`[data-square="${hint.move.from}"]`)?.classList.add('hint-from');
@@ -1041,7 +1012,6 @@
         // ==========================================
 
         function init() {
-            // Mapear DOM
             DOM.menuScreen = document.getElementById('menuScreen');
             DOM.gameScreen = document.getElementById('gameScreen');
             DOM.chessBoard = document.getElementById('chessBoard');
@@ -1056,7 +1026,6 @@
             DOM.hintContent = document.getElementById('hintContent');
             DOM.computerLevel = document.getElementById('computerLevel');
 
-            // Eventos Menu
             document.getElementById('difficultySelector').addEventListener('click', e => {
                 const card = e.target.closest('.difficulty-card');
                 if (card) {
@@ -1067,13 +1036,10 @@
             });
 
             document.getElementById('startGameBtn').addEventListener('click', startGame);
-            
-            // Eventos Jogo
             document.getElementById('requestHintBtn').addEventListener('click', () => BoardRenderer.triggerHint());
             document.getElementById('undoBtn').addEventListener('click', undoMove);
             document.getElementById('newGameBtn').addEventListener('click', startGame);
             
-            // Eventos Modal
             document.getElementById('playAgainBtn').addEventListener('click', () => {
                 DOM.gameOverModal.classList.remove('active');
                 startGame();
@@ -1086,26 +1052,24 @@
         }
 
         function startGame() {
-            // Reset Estado
             gameState.game = new Chess();
             gameState.moveHistory = [];
             gameState.capturedPieces = { w: [], b: [] };
             gameState.isGameOver = false;
             gameState.lastMove = null;
             gameState.selectedSquare = null;
+            gameState.lastDragTime = 0;
 
-            // UI Updates
             DOM.computerLevel.textContent = `Nível: ${CONFIG.difficulty[gameState.selectedDifficulty].name}`;
             DOM.menuScreen.classList.add('hidden');
             DOM.gameScreen.classList.remove('hidden');
-            DOM.gameOverModal.classList.remove('active'); // Garante que o modal feche
+            DOM.gameOverModal.classList.remove('active');
             
             BoardRenderer.createBoard();
             BoardRenderer.updatePieces();
             BoardRenderer.updateHistory();
             BoardRenderer.updateCaptured();
             
-            // Reset Timer e Dicas
             DOM.turnTimerFill.style.width = '100%';
             DOM.hintContent.textContent = "Analisando o jogo...";
             DOM.statusText.textContent = "Sua vez";
@@ -1116,11 +1080,10 @@
         }
 
         function undoMove() {
-            // Desfaz movimento do jogador e da IA
             if (gameState.moveHistory.length < 2 || gameState.isGameOver) return;
             
-            gameState.game.undo(); // IA
-            gameState.game.undo(); // Jogador
+            gameState.game.undo(); 
+            gameState.game.undo(); 
             gameState.moveHistory.pop();
             gameState.moveHistory.pop();
             gameState.lastMove = null;
